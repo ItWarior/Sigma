@@ -9,31 +9,15 @@ export default {
     try {
       const token = authService.parseToken(req);
 
-      const { sessionId }: any = jwt.verifyTokens(token, 'accessToken');
+      const { sessionId } = jwt.verifyToken(token, 'accessToken') as { sessionId: string };
 
       const foundSession = await Session.findById({ _id: sessionId });
 
       if (!foundSession) {
-        throw new HttpError(400, 'You are not login');
+        throw new HttpError(401, 'You are not signed in');
       }
 
       res.locals = await foundSession.populate('user');
-      next();
-    } catch (e) {
-      next(e);
-    }
-  },
-  checkRefreshToken: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token = authService.parseToken(req);
-      jwt.verifyTokens(token, 'refreshWord');
-
-      const foundToken = await Session.findOne({ refreshToken: token });
-
-      if (!foundToken) {
-        throw new HttpError(400, 'Refresh token is wrong');
-      }
-
       next();
     } catch (e) {
       next(e);

@@ -7,8 +7,8 @@ interface UserInterface {
 }
 
 interface PostInterface {
-  userId: object;
   text: string;
+  userId: object;
   updateUp: string;
 }
 

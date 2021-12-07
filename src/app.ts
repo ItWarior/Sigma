@@ -1,10 +1,12 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
+import swaggerUi from 'swagger-ui-express';
 import connect from './database/conection';
 
 import authRouter from './routes/auth.router';
 import usersRouter from './routes/user.router';
 import postRouter from './routes/post.router';
 import HttpError from './errors/http.error';
+import swaggerDoc from './docs/swagger.json';
 
 connect().catch((err): void => console.log(err));
 
@@ -22,6 +24,7 @@ function mainErrorHandler(err: Error, req: Request, res: Response, next: NextFun
   }
 }
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 app.use('/users', usersRouter);
 app.use('/posts', postRouter);
 app.use('/auth', authRouter);

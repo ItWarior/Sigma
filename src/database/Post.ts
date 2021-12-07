@@ -14,7 +14,7 @@ const postSchema = new Schema<PostInterface>(
       ref: 'user',
     },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
+  { timestamps: true },
 );
 
 const Post = model('post', postSchema);

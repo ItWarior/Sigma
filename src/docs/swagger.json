@@ -1,0 +1,202 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Sigma documentation",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "description": "get all list users",
+        "operationId": "allUsers",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer auth token",
+            "required": true,
+            "default": "Bearer accessToken",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Oleg"
+                  },
+                  "_id": {
+                    "type": "string",
+                    "example": "k3jnfjk3j4h3bbh"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "TarasGrodl@gmail.com"
+                  },
+                  "age": {
+                    "type": "number",
+                    "example": 25
+                  },
+                  "roles": {
+                    "type": "string",
+                    "example": "user"
+                  },
+                  "_v": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bed request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "token is empty"
+                },
+                "customCode": {
+                  "description": "custom error",
+                  "type": "number",
+                  "example": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/create": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "description": "create user",
+        "operationId": "createUser",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "default": "oleg",
+            "required": true,
+            "description": "user name"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "default": "oleg@gmail.com",
+            "required": true,
+            "description": "user email"
+          },
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "default": "255dsDds!@",
+            "required": true,
+            "description": "user password"
+          },
+          {
+            "name": "age",
+            "in": "body",
+            "type": "string",
+            "default": "20",
+            "required": true,
+            "description": "user age"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer auth token",
+            "required": true,
+            "default": "Bearer accessToken",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Oleg"
+                  },
+                  "_id": {
+                    "type": "string",
+                    "example": "k3jnfjk3j4h3bbh"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "TarasGrodl@gmail.com"
+                  },
+                  "age": {
+                    "type": "number",
+                    "example": 25
+                  },
+                  "roles": {
+                    "type": "string",
+                    "example": "user"
+                  },
+                  "_v": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bed request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "body is not valid"
+                },
+                "customCode": {
+                  "description": "custom error",
+                  "type": "number",
+                  "example": 404
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bed request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "unawtorized"
+                },
+                "customCode": {
+                  "description": "custom error",
+                  "type": "number",
+                  "example": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
