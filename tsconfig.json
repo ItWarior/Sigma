@@ -8,7 +8,8 @@
         "esModuleInterop": true,
         "baseUrl": "./",
         "skipLibCheck": true,
-        "skipDefaultLibCheck": true
+        "skipDefaultLibCheck": true,
+        "resolveJsonModule" : true,
     },
     "include": [
         "src/**/*"

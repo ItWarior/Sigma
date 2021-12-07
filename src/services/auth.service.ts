@@ -14,10 +14,11 @@ export default {
   },
   createSession: async (refreshToken: string, userId: string): Promise<object> => Session.create({ refreshToken, user: userId }),
 
-  deleteSession: async (sessionId: string): Promise<object> => Session.findByIdAndDelete({ _id: sessionId }),
+  signOut: async (sessionId: string): Promise<object> => Session.findByIdAndDelete({ _id: sessionId }),
 
   updateSession: async (oldRefreshToken: string, newRefreshToken: string): Promise<object> =>
     Session.updateOne({ refreshToken: oldRefreshToken }, { refreshToken: newRefreshToken }),
 
   findSessionByRefreshToken: async (refreshToken: string): Promise<object> => Session.findOne({ refreshToken }),
+  findSessionById: async (sessionId: string): Promise<object> => Session.findById({ _id: sessionId }).populate('user'),
 };

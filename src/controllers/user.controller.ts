@@ -3,6 +3,7 @@ import User from '../database/User';
 import HttpError from '../errors/http.error';
 import userServices from '../services/user.service';
 import userValidator from '../validators/user.validator';
+import userNormalizator from '../utils/user.util';
 
 export default {
   getUsers: async (req: Request, res: Response, next: NextFunction) => {
@@ -24,28 +25,29 @@ export default {
   },
   createUser: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { error } = userValidator.createUserValidator.validate(req.body.user);
+      const { error } = userValidator.createUserValidator.validate(req.body);
+
       if (error) {
         throw new HttpError(400, error.details[0].message);
       }
 
-      const { email } = req.body;
+      const { email } = req.body as { email: string };
 
-      const foundUser = await userServices.userByParam({ email });
+      const foundUser: object = await userServices.userByParam({ email });
       if (foundUser) {
         throw new HttpError(400, 'There is the same user');
       }
 
-      const createdUser = await userServices.createUser(req.body);
+      const createdUser: object = await userServices.createUser(req.body);
 
-      res.json(createdUser);
+      res.json(userNormalizator(createdUser));
     } catch (e) {
       next(e);
     }
   },
   updateUser: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const curentUser = res.locals.user;
+      const currentUser: any = res.locals.user;
       const { id } = req.params as { id: string };
       const infoToUpdate = req.body;
 
@@ -59,16 +61,16 @@ export default {
         throw new HttpError(404, 'User is not found');
       }
 
-      if (curentUser.roles === 'admin') {
+      if (currentUser.roles === 'admin') {
         res.json(await User.findByIdAndUpdate({ _id: id }, infoToUpdate));
         return;
       }
 
-      if (curentUser.roles === 'user' && curentUser._id.toString() !== foundUser._id.toString()) {
+      if (currentUser.roles === 'user' && currentUser._id.toString() !== foundUser._id.toString()) {
         throw new HttpError(400, 'You can not update enother user');
       }
 
-      const updatedUser = await userServices.findByIdAndUpdate(curentUser._id, infoToUpdate);
+      const updatedUser = await userServices.findByIdAndUpdate(currentUser._id, infoToUpdate);
 
       res.json(updatedUser);
     } catch (e) {

@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 
-import jwt from '../services/jwt.service';
+import jwtService from '../services/jwt.service';
 import userService from '../services/user.service';
 import authService from '../services/auth.service';
-import userNormalizator from '../utils/user.util';
 import HttpError from '../errors/http.error';
 import signInValidator from '../validators/auth.validator';
+import sessionService from '../services/session.service';
 
 export default {
   login: async (req: Request, res: Response, next: NextFunction) => {
@@ -21,15 +21,7 @@ export default {
         throw new HttpError(400, 'Your password or email are wrong');
       }
 
-      const normUser: any = userNormalizator(user);
-
-      const refreshToken = jwt.generateRefreshToken(normUser);
-
-      const session: any = await authService.createSession(refreshToken, user.id);
-
-      const accessToken = jwt.generateAccessToken(session._id);
-
-      res.json({ accessToken, refreshToken, ...normUser });
+      res.json(await sessionService.accessSession(user));
     } catch (e) {
       next(e);
     }
@@ -38,7 +30,7 @@ export default {
     try {
       const sessionId = res.locals;
 
-      await authService.deleteSession(sessionId._id);
+      await authService.signOut(sessionId._id);
 
       res.json('logout');
     } catch (e) {
@@ -47,18 +39,23 @@ export default {
   },
   refreshToken: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const oldToken: string = authService.parseToken(req);
-      const user: object = req.body;
+      const accessToken: string = authService.parseToken(req);
+      const refreshToken = req.headers.refreshtoken.toString();
 
-      const refreshToken = jwt.generateRefreshToken(user);
+      if (!accessToken && !refreshToken) {
+        throw new HttpError(400, 'AccessToken and RefreshToken are required');
+      }
+      const { sessionId } = jwtService.verifyWithIgnoreExpiration(accessToken) as { sessionId: string };
 
-      await authService.updateSession(oldToken, refreshToken);
+      const foundSession: any = await authService.findSessionById(sessionId);
+      if (!foundSession) {
+        throw new HttpError(400, 'Refresh token is wrong');
+      }
+      if (foundSession.refreshToken !== refreshToken) {
+        throw new HttpError(400, 'tokens are not the same');
+      }
 
-      const newSession: any = await authService.findSessionByRefreshToken(refreshToken);
-
-      const accessToken = jwt.generateAccessToken(newSession._id);
-
-      res.json({ accessToken, refreshToken, ...user });
+      res.json(await sessionService.refreshSession(refreshToken, foundSession));
     } catch (e) {
       next(e);
     }
