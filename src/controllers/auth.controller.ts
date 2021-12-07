@@ -42,7 +42,7 @@ export default {
       const accessToken: string = authService.parseToken(req);
       const refreshToken = req.headers.refreshtoken.toString();
 
-      if (!accessToken && !refreshToken) {
+      if (!accessToken || !refreshToken) {
         throw new HttpError(400, 'AccessToken and RefreshToken are required');
       }
       const { sessionId } = jwtService.verifyWithIgnoreExpiration(accessToken) as { sessionId: string };
