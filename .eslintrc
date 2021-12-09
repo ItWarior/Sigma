@@ -6,14 +6,17 @@
     "prettier"
   ],
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "prettier",
     "airbnb-base",
-    "airbnb-typescript/base"
+    "airbnb-typescript/base",
+    "prettier",
+    "plugin:prettier/recommended"
   ],
+  "rules": {
+    "import/prefer-default-export": "off",
+    "no-underscore-dangle": "off"
+  },
   "parserOptions": {
     "project": "./tsconfig.json"
   }
 }
+

@@ -1,4 +1,4 @@
-const userNormalizator = (userToNormalize: any) => {
+const normalizeUser = (userToNormalize: any) => {
   const propertyToRemove: string[] = ['password', '__v'];
   const user: any = userToNormalize.toJSON();
 
@@ -9,4 +9,4 @@ const userNormalizator = (userToNormalize: any) => {
   return user;
 };
 
-export default userNormalizator;
+export default normalizeUser;

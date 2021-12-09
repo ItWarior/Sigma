@@ -1,8 +1,8 @@
 import { model, Schema } from 'mongoose';
-import { UserInterface } from '../interfaces/interfaces.shema';
-import constants from '../constants';
+import { Roles } from '../interfaces/authentication';
+import { UserEntity } from '../interfaces/database';
 
-const userSchema = new Schema<UserInterface>({
+const userSchema = new Schema<UserEntity>({
   name: {
     type: String,
     required: true,
@@ -27,8 +27,8 @@ const userSchema = new Schema<UserInterface>({
   },
   roles: {
     type: String,
-    default: constants.roles.user,
-    enum: constants.roles,
+    default: Roles.User,
+    enum: [Roles.User, Roles.Admin],
     require: true,
     trim: true,
   },

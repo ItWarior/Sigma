@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
-import { SessionInterface } from '../interfaces/interfaces.shema';
+import { SessionEntity } from '../interfaces/database';
 
-const sessionSchema = new Schema<SessionInterface>({
+const sessionSchema = new Schema<SessionEntity>({
   refreshToken: {
     type: String,
     required: true,

@@ -1,63 +1,46 @@
-import { NextFunction, Request, Response } from 'express';
-
-import jwtService from '../services/jwt.service';
-import userService from '../services/user.service';
-import authService from '../services/auth.service';
+import { Request, Response } from 'express';
 import HttpError from '../errors/http.error';
+import { TokenType } from '../interfaces/authentication';
+import * as jwtService from '../services/jwt.service';
+import * as sessionService from '../services/session.service';
+import * as userService from '../services/user.service';
 import signInValidator from '../validators/auth.validator';
-import sessionService from '../services/session.service';
+import normalizeUser from '../utils/user.util';
 
-export default {
-  login: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { error } = signInValidator.validate(req.body);
+export async function login(req: Request, res: Response) {
+  const { error } = signInValidator.validate(req.body);
+  if (error) {
+    throw new HttpError(400, error.message);
+  }
 
-      if (error) {
-        throw new HttpError(404, error.message);
-      }
+  const user = await userService.findUserByQuery(req.body);
+  if (!user) {
+    throw new HttpError(400, 'Your password or email are wrong');
+  }
+  const normUser = normalizeUser(user);
+  const newSession = await sessionService.createSession(normUser);
 
-      const user: any = await userService.userByParam(req.body);
-      if (!user) {
-        throw new HttpError(400, 'Your password or email are wrong');
-      }
+  return res.json({ ...newSession, ...normUser });
+}
 
-      res.json(await sessionService.accessSession(user));
-    } catch (e) {
-      next(e);
-    }
-  },
-  logout: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const sessionId = res.locals;
+export async function logout(req: Request, res: Response) {
+  const sessionId = res.locals.session._id;
+  await sessionService.deleteSession(sessionId);
 
-      await authService.signOut(sessionId._id);
+  return res.send();
+}
 
-      res.json('logout');
-    } catch (e) {
-      next(e);
-    }
-  },
-  refreshToken: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const accessToken: string = authService.parseToken(req);
-      const refreshToken = req.headers.refreshtoken.toString();
+export async function refreshToken(req: Request, res: Response) {
+  const access = jwtService.parseAccessToken(req);
+  const refresh = String(req.headers.refreshtoken);
 
-      if (!accessToken || !refreshToken) {
-        throw new HttpError(400, 'AccessToken and RefreshToken are required');
-      }
-      const { sessionId } = jwtService.verifyWithIgnoreExpiration(accessToken) as { sessionId: string };
+  if (!access || !refresh) {
+    throw new HttpError(400, 'AccessToken and RefreshToken are required');
+  }
 
-      const foundSession: any = await authService.findSessionById(sessionId);
-      if (!foundSession) {
-        throw new HttpError(400, 'Refresh token is wrong');
-      }
-      if (foundSession.refreshToken !== refreshToken) {
-        throw new HttpError(400, 'tokens are not the same');
-      }
+  const { sessionId } = jwtService.verifyToken(access, TokenType.Access, { ignoreExpiration: true }) as {
+    sessionId: string;
+  };
 
-      res.json(await sessionService.refreshSession(refreshToken, foundSession));
-    } catch (e) {
-      next(e);
-    }
-  },
-};
+  return res.json(await sessionService.refreshSession(sessionId, refresh));
+}

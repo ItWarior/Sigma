@@ -1,108 +1,80 @@
-import { NextFunction, Request, Response } from 'express';
-import User from '../database/User';
+import { Request, Response } from 'express';
 import HttpError from '../errors/http.error';
-import userServices from '../services/user.service';
+import { Roles } from '../interfaces/authentication';
+import * as userService from '../services/user.service';
+import normalizeUser from '../utils/user.util';
 import userValidator from '../validators/user.validator';
-import userNormalizator from '../utils/user.util';
 
-export default {
-  getUsers: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      res.json(await userServices.findAllUsers());
-    } catch (e) {
-      next(e);
-    }
-  },
-  getUser: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.params) {
-        throw new HttpError(400, 'Params is empty');
-      }
-      res.json(await userServices.findUserById(req.params.id));
-    } catch (e) {
-      next(e);
-    }
-  },
-  createUser: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { error } = userValidator.createUserValidator.validate(req.body);
+export async function getUsers(req: Request, res: Response) {
+  return res.json(await userService.findAllUsers());
+}
 
-      if (error) {
-        throw new HttpError(400, error.details[0].message);
-      }
+export async function getUser(req: Request, res: Response) {
+  if (!req.params.id) {
+    throw new HttpError(400, 'Params is empty');
+  }
+  return res.json(await userService.findUserById(req.params.id));
+}
 
-      const { email } = req.body as { email: string };
+export async function createUser(req: Request, res: Response) {
+  const { error } = userValidator.createUserValidator.validate(req.body);
+  if (error) {
+    throw new HttpError(400, error.details[0].message);
+  }
 
-      const foundUser: object = await userServices.userByParam({ email });
-      if (foundUser) {
-        throw new HttpError(400, 'There is the same user');
-      }
+  const createdUser = await userService.createUser(req.body);
 
-      const createdUser: object = await userServices.createUser(req.body);
+  return res.json(normalizeUser(createdUser));
+}
 
-      res.json(userNormalizator(createdUser));
-    } catch (e) {
-      next(e);
-    }
-  },
-  updateUser: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const currentUser: any = res.locals.user;
-      const { id } = req.params as { id: string };
-      const infoToUpdate = req.body;
+export async function updateUser(req: Request, res: Response) {
+  const { session } = res.locals;
+  const { id } = req.params as { id: string };
+  const infoToUpdate = req.body;
 
-      const { error } = userValidator.createUpdateUserValidator.validate(req.body);
-      if (error) {
-        throw new HttpError(400, error.details[0].message);
-      }
+  const { error } = userValidator.createUpdateUserValidator.validate(infoToUpdate);
+  if (error) {
+    throw new HttpError(400, error.details[0].message);
+  }
 
-      const foundUser: any = await userServices.userByParam({ _id: id });
-      if (!foundUser) {
-        throw new HttpError(404, 'User is not found');
-      }
+  const foundUser: any = await userService.findUserById(id);
+  if (!foundUser) {
+    throw new HttpError(404, 'User is not found');
+  }
 
-      if (currentUser.roles === 'admin') {
-        res.json(await User.findByIdAndUpdate({ _id: id }, infoToUpdate));
-        return;
-      }
+  if (session.user.roles === Roles.Admin) {
+    return res.json(await userService.findByIdAndUpdate(id, infoToUpdate));
+  }
 
-      if (currentUser.roles === 'user' && currentUser._id.toString() !== foundUser._id.toString()) {
-        throw new HttpError(400, 'You can not update enother user');
-      }
+  if (session.user.roles === Roles.User && session.user._id.toString() !== foundUser._id.toString()) {
+    throw new HttpError(400, 'You can not update another user');
+  }
 
-      const updatedUser = await userServices.findByIdAndUpdate(currentUser._id, infoToUpdate);
+  const updatedUser = await userService.findByIdAndUpdate(session.user._id, infoToUpdate);
 
-      res.json(updatedUser);
-    } catch (e) {
-      next(e);
-    }
-  },
-  deleteUser: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const curentUser = res.locals.user;
-      const { id } = req.params as { id: string };
+  return res.json(updatedUser);
+}
 
-      const foundUser: any = await userServices.userByParam({ _id: id });
-      if (!foundUser) {
-        throw new HttpError(404, 'User is not found');
-      }
+export async function deleteUser(req: Request, res: Response) {
+  const { session } = res.locals;
+  const { id } = req.params as { id: string };
 
-      if (foundUser.roles === 'admin') {
-        throw new HttpError(400, 'This user is protected to removing');
-      }
+  const foundUser: any = await userService.findUserById(id);
+  if (!foundUser) {
+    throw new HttpError(404, 'User is not found');
+  }
 
-      if (curentUser.roles === 'admin') {
-        res.json(await userServices.findByIdAndDelete(id));
-        return;
-      }
+  if (foundUser.roles === Roles.Admin) {
+    throw new HttpError(400, 'This user is protected to removing');
+  }
 
-      if (curentUser.roles === 'user' && curentUser._id.toString() !== foundUser._id.toString()) {
-        throw new HttpError(400, 'You can not delete enother user');
-      }
+  if (session.user.roles === Roles.Admin) {
+    return res.json(await userService.findByIdAndDelete(id));
+  }
 
-      res.json(await userServices.findByIdAndDelete(id));
-    } catch (e) {
-      next(e);
-    }
-  },
-};
+  if (session.user.roles === Roles.User && session.user._id.toString() !== foundUser._id.toString()) {
+    throw new HttpError(400, 'You can not delete Another user');
+  }
+
+  return res.json(await userService.findByIdAndDelete(id));
+}
