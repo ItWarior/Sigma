@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
-import { PostInterface } from '../interfaces/interfaces.shema';
+import { PostEntity } from '../interfaces/database';
 
-const postSchema = new Schema<PostInterface>(
+const postSchema = new Schema<PostEntity>(
   {
     text: {
       type: String,

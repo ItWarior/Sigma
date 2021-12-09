@@ -1,75 +1,40 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.2",
   "info": {
     "title": "Sigma documentation",
     "version": "0.0.1"
   },
   "paths": {
-    "/users": {
+    "/log-in": {
       "post": {
+        "summary": "Sign-in endpoint",
         "tags": [
-          "Users"
+          "Authentication"
         ],
-        "description": "get all list users",
-        "operationId": "allUsers",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer auth token",
-            "required": true,
-            "default": "Bearer accessToken",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success response",
-            "schema": {
-              "type": "array",
-              "items": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
                 "properties": {
-                  "name": {
-                    "type": "string",
-                    "example": "Oleg"
-                  },
-                  "_id": {
-                    "type": "string",
-                    "example": "k3jnfjk3j4h3bbh"
-                  },
                   "email": {
-                    "type": "string",
-                    "example": "TarasGrodl@gmail.com"
+                    "type": "string"
                   },
-                  "age": {
-                    "type": "number",
-                    "example": 25
-                  },
-                  "roles": {
-                    "type": "string",
-                    "example": "user"
-                  },
-                  "_v": {
-                    "type": "number",
-                    "example": 0
+                  "password": {
+                    "type": "string"
                   }
                 }
               }
             }
-          },
-          "401": {
-            "description": "Bed request",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "example": "token is empty"
-                },
-                "customCode": {
-                  "description": "custom error",
-                  "type": "number",
-                  "example": 404
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tokens"
                 }
               }
             }
@@ -77,123 +42,428 @@
         }
       }
     },
-    "/users/create": {
+    "/log-out": {
       "post": {
+        "summary": "Log-out endpoint",
         "tags": [
-          "Users"
+          "Authentication"
         ],
-        "description": "create user",
-        "operationId": "createUser",
-        "parameters": [
+        "security": [
           {
-            "name": "name",
-            "in": "body",
-            "type": "string",
-            "default": "oleg",
-            "required": true,
-            "description": "user name"
-          },
-          {
-            "name": "email",
-            "in": "body",
-            "type": "string",
-            "default": "oleg@gmail.com",
-            "required": true,
-            "description": "user email"
-          },
-          {
-            "name": "password",
-            "in": "body",
-            "type": "string",
-            "default": "255dsDds!@",
-            "required": true,
-            "description": "user password"
-          },
-          {
-            "name": "age",
-            "in": "body",
-            "type": "string",
-            "default": "20",
-            "required": true,
-            "description": "user age"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer auth token",
-            "required": true,
-            "default": "Bearer accessToken",
-            "type": "string"
+            "AccessToken": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Success response",
-            "schema": {
-              "type": "array",
-              "items": {
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "example": "Oleg"
-                  },
-                  "_id": {
-                    "type": "string",
-                    "example": "k3jnfjk3j4h3bbh"
-                  },
-                  "email": {
-                    "type": "string",
-                    "example": "TarasGrodl@gmail.com"
-                  },
-                  "age": {
-                    "type": "number",
-                    "example": 25
-                  },
-                  "roles": {
-                    "type": "string",
-                    "example": "user"
-                  },
-                  "_v": {
-                    "type": "number",
-                    "example": 0
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/refresh": {
+      "post": {
+        "summary": "Refresh token endpoint",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/refreshToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tokens"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bed request",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "example": "body is not valid"
-                },
-                "customCode": {
-                  "description": "custom error",
-                  "type": "number",
-                  "example": 404
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "description": "User body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimplifiedUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created user body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
-          },
-          "401": {
-            "description": "Bed request",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "example": "unawtorized"
-                },
-                "customCode": {
-                  "description": "custom error",
-                  "type": "number",
-                  "example": 404
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "summary": "Get user by id",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A target users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user by id",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimplifiedUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A target user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user by id",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/posts": {
+      "post": {
+        "summary": "Create a new post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "description": "Post body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimplifiedPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created post body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/posts/{postId}": {
+      "get": {
+        "summary": "Get post by id",
+        "tags": [
+          "Posts"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/postId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A target post",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update post by id",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/postId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimplifiedPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A target post",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete post by id",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/postId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AccessToken": {
+        "name": "Authorization",
+        "type": "apiKey",
+        "in": "header",
+        "description": "Bearer <JWT TOKEN>"
+      }
+    },
+    "parameters": {
+      "refreshToken": {
+        "name": "refreshToken",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        },
+        "required": true
+      },
+      "userId": {
+        "name": "userId",
+        "in": "path",
+        "schema": {
+          "type": "string"
+        },
+        "required": true
+      },
+      "postId": {
+        "name": "postId",
+        "in": "path",
+        "schema": {
+          "type": "string"
+        },
+        "required": true
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "roles": {
+            "type": "string"
+          }
+        }
+      },
+      "SimplifiedUser": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          }
+        }
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "updateOn": {
+            "type": "string"
+          }
+        }
+      },
+      "SimplifiedPost": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Tokens": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
           }
         }
       }

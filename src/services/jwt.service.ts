@@ -1,21 +1,32 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import constants from '../constants';
+import { Request } from 'express';
+import jwt, { JwtPayload, VerifyOptions } from 'jsonwebtoken';
+import config from '../config';
 import HttpError from '../errors/http.error';
+import { TokenType } from '../interfaces/authentication';
+import { UserEntity } from '../interfaces/database';
 
-export default {
-  generateRefreshToken: (user: object) => jwt.sign({ ...user }, constants.refreshToken, { expiresIn: '31d' }),
+export function generateRefreshToken(user: UserEntity): string {
+  return jwt.sign(user, config.refreshTokenSecret, { expiresIn: '24h' });
+}
 
-  generateAccessToken: (sessionId: string): JwtPayload | string =>
-    jwt.sign({ sessionId }, constants.accessTokenSecret, { expiresIn: '15m' }),
+export function generateAccessToken(sessionId: string): string {
+  return jwt.sign({ sessionId }, config.accessTokenSecret, {
+    expiresIn: '15m',
+  });
+}
 
-  verifyToken: (token: string, tokenType = 'accessToken') => {
-    try {
-      const secretWord: string = tokenType === 'accessToken' ? constants.accessTokenSecret : constants.refreshToken;
+export function verifyToken(token: string, type: TokenType, options?: VerifyOptions): JwtPayload {
+  const secretWord: string = type === TokenType.Access ? config.accessTokenSecret : config.refreshTokenSecret;
 
-      return jwt.verify(token, secretWord);
-    } catch (e) {
-      throw new HttpError(400, 'Token is invalid');
-    }
-  },
-  verifyWithIgnoreExpiration: (accessToken: string) => jwt.verify(accessToken, constants.accessTokenSecret, { ignoreExpiration: true }),
-};
+  return jwt.verify(token, secretWord, options) as JwtPayload;
+}
+
+export function parseAccessToken(req: Request): string {
+  const token = String(req.headers.authorization);
+
+  if (token && token.split(' ')[0] === 'Bearer') {
+    return token.split(' ')[1];
+  }
+
+  throw new HttpError(400, 'Token is empty');
+}
