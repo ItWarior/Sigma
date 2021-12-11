@@ -9,10 +9,12 @@ const local = {
 
 const production = {
   ...local,
-  dbConnectionString: '',
+  dbConnectionString:
+    'mongodb+srv://Proto25:Roter!23433)(@cluster0.reoaw.mongodb.net/Sigma?retryWrites=true&w=majority',
 };
 
-const env = process.env.NODE_ENV;
+const env = 'production';
+
 const config = env === 'production' ? production : local;
 
 log.info(`Configuration was loaded for ${env} environment`);
