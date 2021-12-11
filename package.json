@@ -3,8 +3,16 @@
   "version": "1.0.0",
   "description": "home project",
   "main": "src/app.js",
+  "engines": { "node": "14.17.5" },
   "scripts": {
-    "start": "ts-node --files src/app.ts",
+
+    "start": "node dist/app.js",
+    "postinstall": "tsc",
+    "watch-node": "nodemon dist/app.js",
+    "watch-ts": "tsc -w",
+    "deploy": "git add . && git commit -m Heroku && git push heroku master",
+
+    "startTs": "ts-node --files src/app.ts",
     "watch": "nodemon --inspect=5858 -e ts --exec npm start",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"

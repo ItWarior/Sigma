@@ -10,6 +10,7 @@
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "resolveJsonModule" : true,
+        "outDir": "dist",
     },
     "include": [
         "src/**/*"
