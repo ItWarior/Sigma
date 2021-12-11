@@ -5,6 +5,7 @@
   "main": "src/app.js",
   "engines": { "node": "14.17.5" },
   "scripts": {
+
     "start": "node dist/app.js",
     "postinstall": "tsc",
     "watch-node": "nodemon dist/app.js",
