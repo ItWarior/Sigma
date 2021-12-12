@@ -11,6 +11,7 @@ const production = {
   ...local,
   dbConnectionString:
     'mongodb+srv://Proto25:Roter!23433)(@cluster0.reoaw.mongodb.net/Sigma?retryWrites=true&w=majority',
+  port: process.env.PORT,
 };
 
 const env = 'production';
